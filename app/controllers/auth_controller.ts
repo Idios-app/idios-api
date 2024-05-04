@@ -1,7 +1,6 @@
 import { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import { loginValidator, registerPartialValidator } from '#validators/auth'
-import logger from '@adonisjs/core/services/logger'
 import { randomUUID } from 'node:crypto'
 import * as generator from 'generate-password'
 import Roles from '../enums/roles.js'
@@ -76,8 +75,8 @@ export default class AuthController {
     }
   }
 
+  //TODO : Check this method
   async logout({ auth, response }: HttpContext) {
-    logger.info(`User test)`)
     const user = auth.getUserOrFail()
     const token = auth.user?.currentAccessToken.identifier
     if (!token) {

@@ -9,4 +9,8 @@ export default class RoleService {
       user_order: userOrder,
     })
   }
+
+  async getUserRole(userId: number) {
+    return db.from('up_users_role_links').select('role_id').where('user_id', userId).first()
+  }
 }

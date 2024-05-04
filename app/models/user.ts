@@ -1,10 +1,12 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, computed } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import StrapiNamingStrategy from '../Strategies/StrapiNamingStrategy.js'
+import db from '@adonisjs/lucid/services/db'
+import Roles from '../enums/roles.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -46,6 +48,23 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+
+  @computed()
+  get isAdmin() {
+    return new Promise((resolve, reject) => {
+      db.from('up_users_role_links')
+        .select('role_id')
+        .where('user_id', this.id)
+        .where('role_id', Roles.ADMIN)
+        .first()
+        .then((result) => {
+          resolve(!!result)
+        })
+        .catch((err) => {
+          reject(err)
+        })
+    })
+  }
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     prefix: 'oat_',

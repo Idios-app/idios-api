@@ -9,6 +9,7 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+const DebugsController = () => import('#controllers/debugs_controller')
 const AuthController = () => import('#controllers/auth_controller')
 const UsersController = () => import('#controllers/users_controller')
 
@@ -30,3 +31,11 @@ router
     router.get('me', [AuthController, 'authenticatedUser']).use(middleware.auth())
   })
   .prefix('user')
+
+//Admin
+router
+  .group(() => {
+    router.post('try', [DebugsController, 'try'])
+  })
+  .prefix('admin')
+  .use(middleware.admin())
