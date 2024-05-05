@@ -1,17 +1,23 @@
-import Activity from '#models/activity'
-import logger from '@adonisjs/core/services/logger'
 export default class ActivityService {
-  async findById(id: number, populate?: boolean) {
-    const activity = await Activity.findOrFail(id)
+  private readonly strapiBaseUrl: string
 
-    if (populate) {
-      return await this.populate(activity)
-    }
-
-    return activity
+  constructor() {
+    this.strapiBaseUrl = 'http://localhost:1337/api'
   }
 
-  async populate(activity: Activity) {
-    logger.debug('populate', activity)
+  async fetchActivity(id: number, populate: string): Promise<any> {
+    try {
+      const url = `${this.strapiBaseUrl}/activities/${id}?${populate}`
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        throw new Error(`Error while fetching activity from Strapi: ${response.statusText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`Error while fetching activity from Strapi: ${error.message}`)
+      throw error
+    }
   }
 }
