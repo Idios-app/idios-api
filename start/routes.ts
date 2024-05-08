@@ -9,6 +9,7 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+const AdventuresController = () => import('#controllers/adventures_controller')
 const DebugsController = () => import('#controllers/debugs_controller')
 const AuthController = () => import('#controllers/auth_controller')
 const UsersController = () => import('#controllers/users_controller')
@@ -21,7 +22,14 @@ router.get('/', async () => {
 })
 
 router.get('/users', [UsersController, 'index'])
-router.get('/loading', [SessionController, 'getAllByUserId']).use(middleware.auth())
+
+router
+  .group(() => {
+    router.get('/loading', [SessionController, 'getAllByUserId'])
+
+    router.resource('adventures', AdventuresController).only(['store', 'show', 'edit', 'destroy'])
+  })
+  .use(middleware.auth())
 
 //Registration
 router
