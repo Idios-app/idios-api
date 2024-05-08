@@ -1,12 +1,14 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column, computed } from '@adonisjs/lucid/orm'
+import { BaseModel, column, computed, manyToMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import StrapiNamingStrategy from '../Strategies/StrapiNamingStrategy.js'
 import db from '@adonisjs/lucid/services/db'
 import Roles from '../enums/roles.js'
+import Adventure from '#models/adventure'
+import * as relations from '@adonisjs/lucid/types/relations'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -48,6 +50,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+
+  //Relationship
+  @manyToMany(() => Adventure, {
+    pivotTable: 'adventures_owner_links',
+    pivotForeignKey: 'user_id',
+    pivotRelatedForeignKey: 'adventure_id',
+    pivotColumns: ['id'],
+  })
+  declare adventures: relations.ManyToMany<typeof Adventure>
 
   @computed()
   get isAdmin() {

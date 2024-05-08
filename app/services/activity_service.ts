@@ -5,7 +5,7 @@ export default class ActivityService {
     this.strapiBaseUrl = 'http://localhost:1337/api'
   }
 
-  async fetchActivity(id: number, populate: string): Promise<any> {
+  async fetchActivity(id: string, populate: string): Promise<any> {
     try {
       const url = `${this.strapiBaseUrl}/activities/${id}?${populate}`
       const response = await fetch(url)
@@ -16,8 +16,7 @@ export default class ActivityService {
 
       return await response.json()
     } catch (error) {
-      console.error(`Error while fetching activity from Strapi: ${error.message}`)
-      throw error
+      return error.message
     }
   }
 }

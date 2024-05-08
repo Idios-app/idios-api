@@ -12,6 +12,7 @@ import { middleware } from '#start/kernel'
 const DebugsController = () => import('#controllers/debugs_controller')
 const AuthController = () => import('#controllers/auth_controller')
 const UsersController = () => import('#controllers/users_controller')
+const SessionController = () => import('#controllers/sessions_controller')
 
 router.get('/', async () => {
   return {
@@ -20,6 +21,7 @@ router.get('/', async () => {
 })
 
 router.get('/users', [UsersController, 'index'])
+router.get('/loading', [SessionController, 'getAllByUserId']).use(middleware.auth())
 
 //Registration
 router
