@@ -1,5 +1,6 @@
 import User from '#models/user'
 import { UserInterface } from '../interfaces/user_interface.js'
+import UserRegistered from '#events/user_registered'
 
 export default class UserService {
   async store(params: UserInterface) {
@@ -13,6 +14,8 @@ export default class UserService {
     user.password = params.password
     user.confirmed = params.confirmed
     user.blocked = params.blocked
+
+    await UserRegistered.dispatch(user)
 
     return await user.save()
   }
