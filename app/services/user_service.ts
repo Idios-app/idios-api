@@ -15,8 +15,9 @@ export default class UserService {
     user.confirmed = params.confirmed
     user.blocked = params.blocked
 
+    await user.save()
     await UserRegistered.dispatch(user)
 
-    return await user.save()
+    return user
   }
 }
