@@ -11,10 +11,14 @@ export class AccessCodeService {
     this.response = this.ctx.response
   }
 
-  //TODO : Validator
-  async getByAdventureId(adventureId: number) {
+  async getByAdventure(adventure: Adventure) {
     try {
-      return await AccessCode.findByOrFail('adventure_id', adventureId)
+      return await adventure
+        .related('code')
+        .query()
+        .select('*')
+        .where('expires_at', '>', DateTime.now().toSQLDate())
+        .first()
     } catch (error) {
       return this.response.notFound({
         error:
@@ -35,17 +39,24 @@ export class AccessCodeService {
   }
 
   async generateAccessCode(adventure: Adventure) {
-    if (adventure.$getRelated('code')) {
-      await this.delete(adventure.id)
+    const existingCode = await adventure
+      .related('code')
+      .query()
+      .select('id')
+      .where('expires_at', '>', DateTime.now().toSQLDate())
+
+    const existingCodeIds = existingCode.map((code) => code.id)
+
+    if (existingCodeIds) {
+      await this.delete(adventure.id, existingCodeIds)
     }
-    //const accessCode = new AccessCode()
+
     let code: string
 
     do {
       code = await this.codeGenerator(6)
     } while (await this.getByCode(code))
 
-    //accessCode.code = code
     return await adventure.related('code').create({
       code: code,
       expiresAt: DateTime.now().plus({ day: 1 }),
@@ -61,10 +72,14 @@ export class AccessCodeService {
     return code
   }
 
-  async delete(adventureId: number) {
+  async delete(adventureId: number, codeId: number[]) {
     try {
-      const accessCode = await AccessCode.findOrFail(adventureId)
-      return await accessCode.delete()
+      const adventure = await Adventure.findOrFail(adventureId)
+
+      if (!adventure) new Error('Adventure not found')
+
+      await adventure.related('code').detach(codeId)
+      await AccessCode.query().whereIn('id', codeId).delete()
     } catch (error) {
       return this.response.notFound({
         error: 'An error occurred while trying delete AccessCode : ' + error.message,

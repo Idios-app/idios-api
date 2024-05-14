@@ -26,5 +26,5 @@ export default class AccessCode extends BaseModel {
     pivotRelatedForeignKey: 'adventure_id',
     pivotColumns: ['id'],
   })
-  declare user: relations.ManyToMany<typeof Adventure>
+  declare adventure: relations.ManyToMany<typeof Adventure>
 }

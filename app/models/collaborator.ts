@@ -12,6 +12,9 @@ export default class Collaborator extends BaseModel {
   declare description: string
 
   @column()
+  declare pseudo: string
+
+  @column()
   declare score: number
 
   @column.dateTime({ autoCreate: true })

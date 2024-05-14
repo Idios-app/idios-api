@@ -9,6 +9,7 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+const AccessCodesController = () => import('#controllers/access_codes_controller')
 const AdventuresController = () => import('#controllers/adventures_controller')
 const DebugsController = () => import('#controllers/debugs_controller')
 const AuthController = () => import('#controllers/auth_controller')
@@ -28,6 +29,7 @@ router
     router.get('/loading', [SessionController, 'getAllByUserId'])
 
     router.resource('adventures', AdventuresController).only(['store', 'show', 'edit', 'destroy'])
+    router.resource('code', AccessCodesController).only(['store', 'show'])
   })
   .use(middleware.auth())
 

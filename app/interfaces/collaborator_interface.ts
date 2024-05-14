@@ -3,5 +3,6 @@ export interface CollaboratorInterface {
   adventureId: number
   userId: number
   description: string
+  pseudo: string
   score: number
 }

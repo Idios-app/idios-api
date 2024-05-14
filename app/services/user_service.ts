@@ -7,8 +7,6 @@ export default class UserService {
     const user = new User()
 
     user.username = params.username
-    user.firstName = params.firstName
-    user.lastName = params.lastName
     user.email = params.email
     user.provider = params.provider
     user.password = params.password
@@ -19,5 +17,14 @@ export default class UserService {
     await UserRegistered.dispatch(user)
 
     return user
+  }
+
+  async getCollaboratorProfilesId(user: User) {
+    try {
+      const profiles = await user.related('collaborators').query().select('id')
+      return profiles.map((profile) => profile.id)
+    } catch (error) {
+      return error.message
+    }
   }
 }

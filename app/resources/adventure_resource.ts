@@ -1,7 +1,7 @@
 import { BaseResource } from './base_resource.js'
 
 export default class AdventureResource extends BaseResource {
-  protected relations = ['collaborators', 'owner']
+  protected relations = ['collaborators', 'owner', 'code']
 
   toJson(): {} {
     return {

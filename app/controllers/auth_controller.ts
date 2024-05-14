@@ -32,8 +32,6 @@ export default class AuthController {
 
     const params = {
       username: payload.username,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
       email: `${randomUUID()}@gmail.com`,
       provider: 'local',
       password: generator.generate({

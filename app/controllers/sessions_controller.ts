@@ -6,8 +6,7 @@ export default class GameManagersController {
   //TODO : WIP
   async getAllByUserId({ response }: HttpContext) {
     try {
-      const adventure = new AdventureResource(await Adventure.findOrFail(1))
-      return await adventure.withRelationships()
+      return await new AdventureResource(await Adventure.findOrFail(1)).withRelationships()
     } catch (error) {
       return response.status(error.status).json({
         error: {

@@ -25,7 +25,5 @@ export const registerValidator = vine.compile(
 export const registerPartialValidator = vine.compile(
   vine.object({
     username: vine.string().minLength(1).maxLength(100).escape(),
-    firstName: vine.string().minLength(1).maxLength(100).escape(),
-    lastName: vine.string().minLength(1).maxLength(100).escape(),
   })
 )

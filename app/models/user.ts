@@ -9,6 +9,7 @@ import db from '@adonisjs/lucid/services/db'
 import Roles from '../enums/roles.js'
 import Adventure from '#models/adventure'
 import * as relations from '@adonisjs/lucid/types/relations'
+import Collaborator from '#models/collaborator'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -23,12 +24,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column()
   declare username: string
-
-  @column()
-  declare firstName: string
-
-  @column()
-  declare lastName: string
 
   @column()
   declare email: string
@@ -60,6 +55,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
   })
   declare adventures: relations.ManyToMany<typeof Adventure>
 
+  @manyToMany(() => Collaborator, {
+    pivotTable: 'collaborators_user_links',
+    pivotForeignKey: 'user_id',
+    pivotRelatedForeignKey: 'collaborator_id',
+    pivotColumns: ['id'],
+  })
+  declare collaborators: relations.ManyToMany<typeof Collaborator>
+
+  // TODO : must be refactor with lucid relationship methods
   @computed()
   get isAdmin() {
     return new Promise((resolve, reject) => {

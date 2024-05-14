@@ -16,8 +16,6 @@ export class CollaboratorService {
   async save(params: CollaboratorInterface) {
     const collaborator = new Collaborator()
 
-    // collaborator.adventureId = params.adventureId
-    // collaborator.userId = params.userId
     collaborator.score = params.score
 
     const result = await collaborator.save()
@@ -28,17 +26,17 @@ export class CollaboratorService {
     return result
   }
 
-  async update(params: { id: number; description: string | null; score: number | null }) {
-    const collaborator = await Collaborator.findOrFail(params.id)
-
-    if (collaborator.description !== params.description && params.description !== null) {
-      collaborator.description = params.description
-    }
-
-    if (collaborator.score !== params.score && params.score !== null) {
-      collaborator.score = params.score
-    }
-
-    return await collaborator.save()
-  }
+  // async update(params: { id: number; description: string | null; score: number | null }) {
+  //   const collaborator = await Collaborator.findOrFail(params.id)
+  //
+  //   if (collaborator.description !== params.description && params.description !== null) {
+  //     collaborator.description = params.description
+  //   }
+  //
+  //   if (collaborator.score !== params.score && params.score !== null) {
+  //     collaborator.score = params.score
+  //   }
+  //
+  //   return await collaborator.save()
+  // }
 }
