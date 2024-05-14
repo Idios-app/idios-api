@@ -52,14 +52,15 @@
   },
   "dependencies": {
     "@adonisjs/auth": "^9.2.0",
+    "@adonisjs/bouncer": "^3.1.2",
     "@adonisjs/core": "^6.8.0",
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^20.5.1",
     "@vinejs/vine": "^2.0.0",
+    "generate-password": "^1.7.1",
     "luxon": "^3.4.4",
     "pg": "^8.11.5",
-    "reflect-metadata": "^0.2.2",
-    "generate-password": "^1.7.1"
+    "reflect-metadata": "^0.2.2"
   },
   "hotHook": {
     "boundaries": [

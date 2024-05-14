@@ -11,11 +11,10 @@ export class CollaboratorService {
     this.response = this.ctx.response
   }
 
-  async all() {}
-
   async save(params: CollaboratorInterface) {
     const collaborator = new Collaborator()
 
+    collaborator.pseudo = params.pseudo
     collaborator.score = params.score
 
     const result = await collaborator.save()
@@ -26,17 +25,16 @@ export class CollaboratorService {
     return result
   }
 
-  // async update(params: { id: number; description: string | null; score: number | null }) {
-  //   const collaborator = await Collaborator.findOrFail(params.id)
-  //
-  //   if (collaborator.description !== params.description && params.description !== null) {
-  //     collaborator.description = params.description
-  //   }
-  //
-  //   if (collaborator.score !== params.score && params.score !== null) {
-  //     collaborator.score = params.score
-  //   }
-  //
-  //   return await collaborator.save()
-  // }
+  async update(id: number, pseudo?: string, description?: string, score?: number) {
+    const collaborator = await Collaborator.findOrFail(id)
+
+    if (pseudo && collaborator.pseudo !== pseudo) collaborator.pseudo = pseudo
+
+    if (description && collaborator.description !== description)
+      collaborator.description = description
+
+    if (score && collaborator.score !== score) collaborator.score = score
+
+    return await collaborator.save()
+  }
 }

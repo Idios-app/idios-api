@@ -9,11 +9,11 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+const CollaboratorsController = () => import('#controllers/collaborators_controller')
 const AccessCodesController = () => import('#controllers/access_codes_controller')
 const AdventuresController = () => import('#controllers/adventures_controller')
 const DebugsController = () => import('#controllers/debugs_controller')
 const AuthController = () => import('#controllers/auth_controller')
-const UsersController = () => import('#controllers/users_controller')
 const SessionController = () => import('#controllers/sessions_controller')
 
 router.get('/', async () => {
@@ -22,14 +22,15 @@ router.get('/', async () => {
   }
 })
 
-router.get('/users', [UsersController, 'index'])
-
 router
   .group(() => {
     router.get('/loading', [SessionController, 'getAllByUserId'])
 
     router.resource('adventures', AdventuresController).only(['store', 'show', 'edit', 'destroy'])
     router.resource('code', AccessCodesController).only(['store', 'show'])
+    router
+      .resource('collaborator', CollaboratorsController)
+      .only(['store', 'show', 'update', 'destroy'])
   })
   .use(middleware.auth())
 
