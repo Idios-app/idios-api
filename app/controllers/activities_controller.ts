@@ -13,6 +13,7 @@ export default class ActivitiesController {
         params.id,
         'populate[activity][populate]=*&populate[recap][populate]=*&populate[vote][populate]=*'
       )
+      //return activity.data.attributes.activity
       return new ActivityResource(activity.data, Activities.ACTIVITY)
     } catch (error) {
       return response.status(500).json({ error: 'Error while fetching activity' })
