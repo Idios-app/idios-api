@@ -1,82 +1,102 @@
+import Activities from '../enums/activities.js'
+
 enum List {
   dialogs = 'dialogs',
+  background = 'background',
+  items = 'items',
+}
+
+const SLICE_DATA_PROPS = [List.dialogs, List.items]
+
+type SliceData = {
+  [key: string]: SliceData | any
+  slice?: string
 }
 
 export abstract class BaseActivityResource {
-  protected activity: any
-  protected resource: {}
+  protected schema: Array<object> = []
 
-  constructor(activitySchema: JSON) {
-    this.activity = activitySchema
-    this.resource = this.toJson()
-    this.mapping()
+  constructor(data: any, type: Activities) {
+    this.jsonParser(data.attributes[type])
   }
 
-  abstract toJson(): {}
+  abstract additionalProperties(): {}
 
-  mapping() {
-    const slices = {}
-
-    this.jsonParser(this.activity.attributes)
-
-    this.resource = {
-      id: this.activity.id,
-      title: this.activity.attributes.title,
-      ...this.resource,
-      ...slices,
-    }
-  }
-
-  //TODO : remove logs
-  jsonParser(obj: any, depth: number = 0) {
+  private jsonParser(obj: any, depth: number = 0, parentData: SliceData = {}) {
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         const enumValue = List[key as keyof typeof List]
+
         if (enumValue) {
-          console.log(`${'-'.repeat(depth)}Key: ${key} / found ${enumValue}`)
           const methodName = List[key as keyof typeof List]
           const method = this[methodName]
           if (typeof method === 'function') {
-            method.call(this, obj[key])
+            method.call(this, obj[key], parentData)
+            if (SLICE_DATA_PROPS.includes(enumValue) && !parentData.sliceData) {
+              parentData.sliceData = {}
+            }
+            if (parentData[key]) {
+              if (SLICE_DATA_PROPS.includes(enumValue) && parentData.sliceData) {
+                parentData.sliceData[key] = parentData[key]
+                delete parentData[key]
+              }
+            }
+          }
+        } else if (key === '__component') {
+          const componentName = obj[key].match(/\w+$/)[0]
+          delete obj[key]
+          const componentData = this.jsonParser(obj, depth, { slice: componentName })
+          if (Object.keys(componentData).length > 0) {
+            this.schema = [...this.schema, componentData]
           }
         } else {
-          console.log(`${'-'.repeat(depth)}Key: ${key}`)
-        }
+          const value = obj[key]
 
-        if (key === '__component') {
-          console.log(`${'-'.repeat(depth)}Component: ${obj[key]}`)
-        }
-
-        const value = obj[key]
-
-        // Check for array
-        if (typeof value === 'object' && value !== null) {
-          if (Array.isArray(value)) {
-            for (const item of value) {
-              this.jsonParser(item, depth + 1)
+          if (typeof value === 'object' && value !== null) {
+            if (Array.isArray(value)) {
+              for (const item of value) {
+                this.jsonParser(item, depth + 1, parentData)
+              }
+            } else {
+              this.jsonParser(value, depth + 1, parentData)
             }
           } else {
-            this.jsonParser(value, depth + 1)
+            if (!parentData.sliceData) {
+              parentData.sliceData = {}
+            }
+            parentData.sliceData[key] = value
           }
         }
       }
     }
+    return parentData
   }
 
-  protected dialogs(obj: any) {
-    console.log(obj)
-    // let dialogs = {}
-    // for (const key in obj) {
-    //   if (obj.hasOwnProperty(key)) {
-    //     const dialogData = obj[key as keyof typeof obj]
-    //     dialogs = {
-    //       ...dialogs,
-    //       [key]: {
-    //         animation: dialogData.animation,
-    //         text: dialogData.text,
-    //       },
-    //     }
-    //   }
-    // }
+  protected dialogs(obj: any, parentData: SliceData) {
+    if (Array.isArray(obj)) {
+      obj.forEach((dialog: any) => {
+        delete dialog.id
+      })
+      parentData[List.dialogs] = obj
+    } else if (typeof obj === 'object') {
+      delete obj.id
+      parentData[List.dialogs] = obj
+    }
+  }
+
+  protected items(obj: any, parentData: SliceData) {
+    if (Array.isArray(obj)) {
+      obj.forEach((item: any) => {
+        delete item.id
+      })
+      parentData[List.items] = obj
+    } else if (typeof obj === 'object') {
+      delete obj.id
+      parentData[List.items] = obj
+    }
+  }
+
+  protected background(obj: any, parentData: SliceData) {
+    parentData[List.background] = obj
   }
 }
