@@ -18,10 +18,6 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Check SSH connection
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'echo "SSH connection successful"'
-
       - name: Install dependencies
         run: npm install
 
