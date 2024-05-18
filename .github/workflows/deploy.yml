@@ -32,6 +32,6 @@ jobs:
 
       - name: Install production dependencies on server
         run: |
-          npm ci --omit="dev"
-          pm2 restart adonis || pm2 start node bin/server.js --name adonis
+          npm ci
+          pm2 restart adonis
           pm2 save
