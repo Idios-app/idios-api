@@ -32,4 +32,5 @@ jobs:
 
       - name: Install production dependencies on server
         run: |
-          npm ci
+          npm ci --omit="dev"
+          npm i reflect-metadata
