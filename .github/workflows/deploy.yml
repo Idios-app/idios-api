@@ -32,7 +32,7 @@ jobs:
           SOURCE: "build/"  # Ensure this is the correct build output directory
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: "/home/bitnami/idios-api/"  # Adjust this to your target directory on the server
+          TARGET: "/home/bitnami/"  # Adjust this to your target directory on the server
 
       - name: Install production dependencies on server
         run: |
