@@ -32,5 +32,4 @@ jobs:
 
       - name: Install production dependencies on server
         run: |
-          echo "$PWD"
           npm ci --omit="dev"
