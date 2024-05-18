@@ -32,7 +32,6 @@ jobs:
 
       - name: Install production dependencies on server
         run: |
-          cd ~/idios-api
           npm ci --omit="dev"
           pm2 restart adonis || pm2 start node bin/server.js --name adonis
           pm2 save
