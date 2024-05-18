@@ -32,7 +32,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22  # Use the correct port for SSH
           script: |
-            cd ~/home/bitnami/idios-api
+            cd ~/idios-api
             git pull origin main
             git status
             npm ci
