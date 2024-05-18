@@ -27,7 +27,6 @@ jobs:
           SOURCE: "build/"
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: "~/idios-api"
           EXCLUDE: "/build/"
 
       - name: Install production dependencies on server
