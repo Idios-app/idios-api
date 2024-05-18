@@ -33,5 +33,3 @@ jobs:
       - name: Install production dependencies on server
         run: |
           npm ci
-          pm2 restart adonis
-          pm2 save
