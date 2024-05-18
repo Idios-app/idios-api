@@ -18,33 +18,31 @@ jobs:
         with:
           node-version: '20.x'
 
+      - name: Check SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'echo "SSH connection successful"'
+
       - name: Install dependencies
         run: npm install
 
       - name: Build project
         run: npm run build  # Adjust this command if your project has a build step
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
-
-
-      - name: Debug SSH connection
-        run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'echo "SSH connection successful"'
-
       - name: Copy build files to server
-        run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" build/ ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/bitnami/idios-api/
+        uses: easingthemes/ssh-deploy@v2.1.5
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rltgoDzvO --delete"
+          SOURCE: "build/"  # Ensure this is the correct build output directory
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: "/home/bitnami/idios-api/"  # Adjust this to your target directory on the server
 
       - name: Install production dependencies on server
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
           cd /home/bitnami/idios-api
           npm ci --omit="dev"
-          pm2 restart idios-api || pm2 start node bin/server.js --name idios-api
+          pm2 restart adonis || pm2 start node bin/server.js --name adonis
           pm2 save
           EOF
