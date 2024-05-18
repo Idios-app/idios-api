@@ -10,31 +10,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - name: Install Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-
-      - name: Install dependencies
+      - name: Install npm dependencies
         run: npm install
-
-      - name: Build project
-        run: npm run build  # Adjust this command if your project has a build step
-
-      - name: Deploy using ssh
-        uses: appleboy/ssh-action@master
+      - name: Run build task
+        run: npm run build --if-present
+      - name: Deploy to Server
+        uses: easingthemes/ssh-deploy@main
         with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22  # Use the correct port for SSH
-          script: |
-            cd ~/idios-api
-            git pull origin main
-            git status
-            npm ci
-            pm2 restart adonis || pm2 start node bin/server.js --name adonis
-            pm2 save
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rlgoDzvc -i --delete"
+          SOURCE: "build/"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}
+          EXCLUDE: "/build/, /node_modules/"
