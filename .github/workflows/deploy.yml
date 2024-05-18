@@ -24,21 +24,36 @@ jobs:
       - name: Build project
         run: npm run build  # Adjust this command if your project has a build step
 
-      - name: Copy build files to server
-        uses: easingthemes/ssh-deploy@v2.1.5
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-rltgoDzvO --delete"
-          SOURCE: "build/"  # Ensure this is the correct build output directory
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: "/home/bitnami/"  # Adjust this to your target directory on the server
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          port: 80
+          script: |
+            cd ~/home/bitnami/idios-api
+            git pull origin main
+            git status
+            npm ci
+            pm2 restart adonis || pm2 start node bin/server.js --name adonis
+            pm2 save
 
-      - name: Install production dependencies on server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
-          cd /home/bitnami/idios-api
-          npm ci --omit="dev"
-          pm2 restart adonis || pm2 start node bin/server.js --name adonis
-          pm2 save
-          EOF
+#      - name: Copy build files to server
+#        uses: easingthemes/ssh-deploy@v2.1.5
+#        env:
+#          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+#          ARGS: "-rltgoDzvO --delete"
+#          SOURCE: "build/"  # Ensure this is the correct build output directory
+#          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+#          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+#          TARGET: "/home/bitnami/"  # Adjust this to your target directory on the server
+#
+#      - name: Install production dependencies on server
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+#          cd /home/bitnami/idios-api
+#          npm ci --omit="dev"
+#          pm2 restart adonis || pm2 start node bin/server.js --name adonis
+#          pm2 save
+#          EOF
