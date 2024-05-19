@@ -37,5 +37,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            nvm use default
+            node -v
             cd ~/idios-api
             npm ci --omit="dev"
