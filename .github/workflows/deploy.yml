@@ -31,5 +31,11 @@ jobs:
           EXCLUDE: "/build/, /node_modules/"
 
       - name: Install production dependencies on server
-        run: |
-          npm ci --omit="dev"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/idios-api
+            npm ci --omit="dev"
