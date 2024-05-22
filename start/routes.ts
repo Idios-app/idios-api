@@ -28,6 +28,8 @@ router
     router.get('loading', [SessionController, 'getAllByUserId'])
 
     router.resource('adventures', AdventuresController).only(['store', 'show', 'edit', 'destroy'])
+    router.get('adventures/:id/round', [AdventuresController, 'getTodayActivity'])
+
     router.resource('codes', AccessCodesController).only(['store', 'show'])
     router
       .resource('collaborators', CollaboratorsController)

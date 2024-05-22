@@ -10,6 +10,9 @@ export default class Round extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
+  @column()
+  declare selectedSubject: object
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

@@ -1,7 +1,13 @@
 import Adventure from '#models/adventure'
 import Timeline from '#models/timeline'
+import { inject } from '@adonisjs/core'
+import { RoundService } from '#services/round_service'
+import { DateTime } from 'luxon'
 
+@inject()
 export class TimelineService {
+  constructor(protected roundService: RoundService) {}
+
   async save(adventure: Adventure) {
     const timeline = new Timeline()
 
@@ -10,6 +16,8 @@ export class TimelineService {
     const result = await timeline.save()
 
     result.related('adventure').attach([adventure.id])
+
+    await this.roundService.save(result)
 
     return result
   }
@@ -31,7 +39,14 @@ export class TimelineService {
     await timeline.save()
   }
 
-  async addNewRound(timeline: Timeline) {
-    timeline
+  async getTodayRound(timeline: Timeline) {
+    const today = DateTime.now().startOf('day').toString()
+    return await timeline.related('rounds').query().where('created_at', '>=', today).first()
+  }
+
+  async addTodayRound(timeline: Timeline) {
+    //TODO : check if round available or streak broke
+
+    return await this.roundService.save(timeline)
   }
 }

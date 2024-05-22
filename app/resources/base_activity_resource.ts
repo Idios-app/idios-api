@@ -1,10 +1,10 @@
-enum Components {
+enum Props {
   dialogs = 'dialogs',
   background = 'background',
   items = 'items',
 }
 
-const SLICE_DATA_PROPS = [Components.dialogs, Components.items]
+const SLICE_DATA_PROPS = [Props.dialogs, Props.items]
 
 type SliceData = {
   [key: string]: SliceData | any
@@ -46,7 +46,7 @@ export abstract class BaseActivityResource {
   }
 
   private isEnum(key: string): boolean {
-    return Components.hasOwnProperty(key)
+    return Props.hasOwnProperty(key)
   }
 
   private isObject(value: any): boolean {
@@ -54,8 +54,8 @@ export abstract class BaseActivityResource {
   }
 
   private handleEnum(key: string, value: any, parentData: SliceData, obj: any): void {
-    const enumValue = Components[key as keyof typeof Components]
-    const methodName = Components[key as keyof typeof Components]
+    const enumValue = Props[key as keyof typeof Props]
+    const methodName = Props[key as keyof typeof Props]
 
     if (typeof this[methodName] === 'function') {
       this[methodName].call(this, value, parentData)
@@ -107,18 +107,18 @@ export abstract class BaseActivityResource {
       obj.forEach((dialog: any) => {
         delete dialog.id
       })
-      parentData[Components.dialogs] = obj
+      parentData[Props.dialogs] = obj
     } else if (typeof obj === 'object') {
       delete obj.id
-      parentData[Components.dialogs] = obj
+      parentData[Props.dialogs] = obj
     }
   }
 
   private items(obj: any, parentData: SliceData) {
-    parentData[Components.items] = obj
+    parentData[Props.items] = obj
   }
 
   private background(obj: any, parentData: SliceData) {
-    parentData[Components.background] = obj
+    parentData[Props.background] = obj
   }
 }

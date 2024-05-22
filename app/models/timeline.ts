@@ -32,5 +32,5 @@ export default class Timeline extends BaseModel {
     pivotRelatedForeignKey: 'round_id',
     pivotColumns: ['id'],
   })
-  declare timeline: relations.ManyToMany<typeof Round>
+  declare rounds: relations.ManyToMany<typeof Round>
 }

@@ -1,6 +1,7 @@
 import { inject } from '@adonisjs/core'
 import StrapiService from '#services/strapi_service'
 import Activities from '../enums/activities.js'
+import Activity from '#models/activity'
 
 @inject()
 export default class ActivityService {
@@ -10,7 +11,7 @@ export default class ActivityService {
     this.strapiBaseUrl = 'http://localhost:1337/api/activities'
   }
 
-  async fetchActivity(id: string) {
+  async fetchRawProposalSchema(id: string | number) {
     try {
       const url = `${this.strapiBaseUrl}/${id}?populate[${Activities.ACTIVITY}][populate]=*`
       const options = {
@@ -27,7 +28,24 @@ export default class ActivityService {
     }
   }
 
-  async fetchRecap(id: string) {
+  async fetchRawActivitySchema(id: string | number) {
+    try {
+      const url = `${this.strapiBaseUrl}/${id}?populate[${Activities.ACTIVITY}][populate]=*`
+      const options = {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${process.env.STRAPI_TOKEN}`,
+        },
+      }
+
+      const response = await fetch(url, options)
+      return await response.json()
+    } catch (error) {
+      return error.message
+    }
+  }
+
+  async fetchRawRecapSchema(id: string | number) {
     try {
       const url = `${this.strapiBaseUrl}/${id}?populate[${Activities.RECAP}][populate]=*`
       const options = {
@@ -44,7 +62,7 @@ export default class ActivityService {
     }
   }
 
-  async fetchVote(id: string) {
+  async fetchRawVoteSchema(id: string | number) {
     try {
       const url = `${this.strapiBaseUrl}/${id}?populate[${Activities.VOTE}][populate]=*`
       const options = {
@@ -56,6 +74,16 @@ export default class ActivityService {
 
       const response = await fetch(url, options)
       return await response.json()
+    } catch (error) {
+      return error.message
+    }
+  }
+
+  async getRandomActivity() {
+    try {
+      const randomActivity = await Activity.query().orderByRaw('RANDOM()').first()
+      if (!randomActivity) throw new Error('Activity is missing')
+      return randomActivity
     } catch (error) {
       return error.message
     }

@@ -8,7 +8,7 @@ export default class ActivitiesController {
   constructor(protected activityService: ActivityService) {}
   async show({ response, params }: HttpContext) {
     try {
-      const activity = await this.activityService.fetchActivity(params.id)
+      const activity = await this.activityService.fetchRawActivitySchema(params.id)
       return new ActivityResource(activity.data)
     } catch (error) {
       return response.status(500).json({ error: 'Error while fetching activity' })
@@ -17,7 +17,7 @@ export default class ActivitiesController {
 
   async showRecap({ response, params }: HttpContext) {
     try {
-      const activity = await this.activityService.fetchRecap(params.id)
+      const activity = await this.activityService.fetchRawRecapSchema(params.id)
       return new ActivityResource(activity.data)
     } catch (error) {
       return response.status(500).json({ error: 'Error while fetching activity recap' })
@@ -26,7 +26,7 @@ export default class ActivitiesController {
 
   async showVote({ response, params }: HttpContext) {
     try {
-      const activity = await this.activityService.fetchVote(params.id)
+      const activity = await this.activityService.fetchRawVoteSchema(params.id)
       return new ActivityResource(activity.data)
     } catch (error) {
       return response.status(500).json({ error: 'Error while fetching activity vote' })
