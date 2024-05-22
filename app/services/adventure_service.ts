@@ -33,4 +33,34 @@ export class AdventureService {
   async getById(id: number) {
     return await Adventure.find(id)
   }
+
+  async getAdventureTimeline(adventure: Adventure) {
+    const timelines = await adventure.related('timelines').query()
+
+    if (!timelines.length) {
+      return false
+    }
+
+    const activeTimeline = timelines.find((timeline) => timeline.isActive)
+
+    if (activeTimeline) {
+      return activeTimeline
+    }
+
+    return false
+  }
+
+  async isAdventureCollaborator(user: User | Collaborator, adventure: Adventure) {
+    const adventureCollaborators = await adventure.related('collaborators').query()
+    if (user instanceof User) {
+      const userCollaborators = await user.related('collaborators').query()
+      return userCollaborators.some((userCollaborator) =>
+        adventureCollaborators.some(
+          (adventureCollaborator) => userCollaborator.id === adventureCollaborator.id
+        )
+      )
+    }
+
+    return adventureCollaborators.some((collaborator) => collaborator.id === user.id)
+  }
 }

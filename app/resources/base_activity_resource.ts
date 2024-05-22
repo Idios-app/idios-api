@@ -1,28 +1,32 @@
-import Activities from '../enums/activities.js'
-
-enum List {
+enum Components {
   dialogs = 'dialogs',
   background = 'background',
   items = 'items',
 }
 
-const SLICE_DATA_PROPS = [List.dialogs, List.items]
+const SLICE_DATA_PROPS = [Components.dialogs, Components.items]
 
 type SliceData = {
   [key: string]: SliceData | any
-  slice?: string
 }
 
 export abstract class BaseActivityResource {
   protected schema: Array<object> = []
 
-  constructor(data: any, type: Activities) {
-    this.parseJson(data.attributes[type])
+  constructor(data: any) {
+    if (data && data.attributes) {
+      const arrayKey = Object.keys(data.attributes).find((key) =>
+        Array.isArray(data.attributes[key])
+      )
+      if (arrayKey) {
+        this.parser(data.attributes[arrayKey])
+      }
+    }
   }
 
   abstract additionalProperties(): {}
 
-  private parseJson(obj: any, parentData: SliceData = {}): SliceData {
+  private parser(obj: any, parentData: SliceData = {}): SliceData {
     for (const key in obj) {
       if (!obj.hasOwnProperty(key)) continue
 
@@ -42,7 +46,7 @@ export abstract class BaseActivityResource {
   }
 
   private isEnum(key: string): boolean {
-    return List.hasOwnProperty(key)
+    return Components.hasOwnProperty(key)
   }
 
   private isObject(value: any): boolean {
@@ -50,8 +54,8 @@ export abstract class BaseActivityResource {
   }
 
   private handleEnum(key: string, value: any, parentData: SliceData, obj: any): void {
-    const enumValue = List[key as keyof typeof List]
-    const methodName = List[key as keyof typeof List]
+    const enumValue = Components[key as keyof typeof Components]
+    const methodName = Components[key as keyof typeof Components]
 
     if (typeof this[methodName] === 'function') {
       this[methodName].call(this, value, parentData)
@@ -73,7 +77,7 @@ export abstract class BaseActivityResource {
     const componentName = obj['__component'].match(/\w+$/)[0]
     delete obj['__component']
 
-    const componentData = this.parseJson(obj, { slice: componentName })
+    const componentData = this.parser(obj, { slice: componentName })
 
     if (Object.keys(componentData).length > 0) {
       this.schema = [...this.schema, componentData]
@@ -83,10 +87,10 @@ export abstract class BaseActivityResource {
   private handleObject(value: any, parentData: SliceData): void {
     if (Array.isArray(value)) {
       for (const item of value) {
-        this.parseJson(item, parentData)
+        this.parser(item, parentData)
       }
     } else {
-      this.parseJson(value, parentData)
+      this.parser(value, parentData)
     }
   }
 
@@ -98,26 +102,23 @@ export abstract class BaseActivityResource {
     parentData.sliceData[key] = value
   }
 
-  protected dialogs(obj: any, parentData: SliceData) {
+  private dialogs(obj: any, parentData: SliceData) {
     if (Array.isArray(obj)) {
       obj.forEach((dialog: any) => {
         delete dialog.id
       })
-      parentData[List.dialogs] = obj
+      parentData[Components.dialogs] = obj
     } else if (typeof obj === 'object') {
       delete obj.id
-      parentData[List.dialogs] = obj
+      parentData[Components.dialogs] = obj
     }
   }
 
-  protected items(obj: any, parentData: SliceData) {
-    if (obj[0].references) {
-      //console.log(obj[0].references, obj[0].id)
-    }
-    parentData[List.items] = obj
+  private items(obj: any, parentData: SliceData) {
+    parentData[Components.items] = obj
   }
 
-  protected background(obj: any, parentData: SliceData) {
-    parentData[List.background] = obj
+  private background(obj: any, parentData: SliceData) {
+    parentData[Components.background] = obj
   }
 }

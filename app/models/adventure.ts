@@ -4,6 +4,7 @@ import * as relations from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import Collaborator from '#models/collaborator'
 import AccessCode from '#models/access_code'
+import Timeline from '#models/timeline'
 
 export default class Adventure extends BaseModel {
   @column({ isPrimary: true })
@@ -45,4 +46,12 @@ export default class Adventure extends BaseModel {
     pivotColumns: ['id'],
   })
   declare code: relations.ManyToMany<typeof AccessCode>
+
+  @manyToMany(() => Timeline, {
+    pivotTable: 'timelines_adventure_links',
+    pivotForeignKey: 'adventure_id',
+    pivotRelatedForeignKey: 'timeline_id',
+    pivotColumns: ['id'],
+  })
+  declare timelines: relations.ManyToMany<typeof Timeline>
 }
