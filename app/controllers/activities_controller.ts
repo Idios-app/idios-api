@@ -8,7 +8,7 @@ export default class ActivitiesController {
   constructor(protected activityService: ActivityService) {}
   async show({ response, params }: HttpContext) {
     try {
-      const activity = await this.activityService.fetchRawActivitySchema(params.id)
+      const activity = await this.activityService.fetchRawProposalSchema(params.id)
       return new ActivityResource(activity.data)
     } catch (error) {
       return response.status(500).json({ error: 'Error while fetching activity' })

@@ -13,9 +13,6 @@ export default class Adventure extends BaseModel {
   @column()
   declare name: string
 
-  @column()
-  declare streak: number
-
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

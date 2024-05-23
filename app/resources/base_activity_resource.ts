@@ -32,7 +32,7 @@ export abstract class BaseActivityResource {
 
       const value = obj[key]
 
-      if (this.isEnum(key)) {
+      if (Props.hasOwnProperty(key)) {
         this.handleEnum(key, value, parentData, obj)
       } else if (key === '__component') {
         this.handleComponent(obj)
@@ -43,10 +43,6 @@ export abstract class BaseActivityResource {
       }
     }
     return parentData
-  }
-
-  private isEnum(key: string): boolean {
-    return Props.hasOwnProperty(key)
   }
 
   private isObject(value: any): boolean {

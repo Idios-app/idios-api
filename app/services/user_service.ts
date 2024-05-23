@@ -1,5 +1,5 @@
 import User from '#models/user'
-import { UserInterface } from '../interfaces/user_interface.js'
+import UserInterface from '../interfaces/user_interface.js'
 import UserRegistered from '#events/user_registered'
 
 export default class UserService {

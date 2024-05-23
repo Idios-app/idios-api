@@ -14,7 +14,7 @@ export default class AdventurePolicy extends BasePolicy {
     return !!user
   }
 
-  getCurrentActivity(user: User, adventure: Adventure): AuthorizerResponse {
+  collaboratorAction(user: User, adventure: Adventure): AuthorizerResponse {
     return this.adventureService.isAdventureCollaborator(user, adventure)
   }
 }

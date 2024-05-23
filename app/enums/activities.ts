@@ -1,6 +1,6 @@
 enum Activities {
-  PROPOSAL = 'activity',
-  ACTIVITY = 'activity',
+  PROPOSAL = 'proposal',
+  CONTRIBUTION = 'contribution',
   RECAP = 'recap',
   VOTE = 'vote',
 }

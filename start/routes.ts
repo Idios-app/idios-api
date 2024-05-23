@@ -29,6 +29,8 @@ router
 
     router.resource('adventures', AdventuresController).only(['store', 'show', 'edit', 'destroy'])
     router.get('adventures/:id/round', [AdventuresController, 'getTodayActivity'])
+    router.post('adventures/:id/round/proposal', [AdventuresController, 'proposalAnswer'])
+    router.post('adventures/:id/round/contribution', [AdventuresController, 'contributionAnswer'])
 
     router.resource('codes', AccessCodesController).only(['store', 'show'])
     router

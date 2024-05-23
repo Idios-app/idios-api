@@ -1,5 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { createAdventureValidator } from '#validators/adventure'
+import {
+  contributionAdventureValidator,
+  createAdventureValidator,
+  proposalAdventureValidator,
+} from '#validators/adventure'
 import { inject } from '@adonisjs/core'
 import { AdventureService } from '#services/adventure_service'
 import { CollaboratorService } from '#services/collaborator_service'
@@ -9,6 +13,7 @@ import AdventurePolicy from '#policies/adventure_policy'
 import { TimelineService } from '#services/timeline_service'
 import ActivityResource from '../resources/activity_resource.js'
 import ActivityService from '#services/activity_service'
+import { RoundService } from '#services/round_service'
 
 @inject()
 export default class AdventuresController {
@@ -17,7 +22,8 @@ export default class AdventuresController {
     protected accessCodeService: AccessCodeService,
     protected collaboratorService: CollaboratorService,
     protected timelineService: TimelineService,
-    protected activityService: ActivityService
+    protected activityService: ActivityService,
+    protected roundService: RoundService
   ) {}
 
   async store({ bouncer, auth, request, response }: HttpContext) {
@@ -31,7 +37,6 @@ export default class AdventuresController {
       const adventure = await this.adventureService.save({
         userId: auth.user!.id,
         name: payload.name,
-        streak: 0,
       })
 
       await this.collaboratorService.save({
@@ -65,7 +70,7 @@ export default class AdventuresController {
 
       const isAuthorized = await bouncer
         .with(AdventurePolicy)
-        .allows('getCurrentActivity', adventure)
+        .allows('collaboratorAction', adventure)
       if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
 
       let timeline = await this.adventureService.getAdventureTimeline(adventure)
@@ -74,24 +79,81 @@ export default class AdventuresController {
         await this.timelineService.setTimelineActive(timeline)
       }
 
-      let todayRound = await this.timelineService.getTodayRound(timeline)
+      let todayRound = await this.roundService.getTodayRound(timeline)
       if (!todayRound) {
-        todayRound = await this.timelineService.addTodayRound(timeline)
+        todayRound = await this.roundService.addTodayRound(timeline)
       }
       if (!todayRound) throw new Error('Round not found')
 
       const activity = await todayRound.related('activity').query().first()
       if (!activity) throw new Error('Activity not found')
 
-      const activitySchema = await this.activityService.fetchRawActivitySchema(activity.id)
-      const resource = new ActivityResource(activitySchema.data)
+      if (!todayRound.selectedSubject) {
+        const activitySchema = await this.activityService.fetchRawProposalSchema(activity.id)
+        return new ActivityResource(activitySchema.data)
+      }
 
-      if (!todayRound.selectedSubject) return resource
-
-      return resource.answerMode(todayRound)
+      const activitySchema = await this.activityService.fetchRawContributionSchema(activity.id)
+      return new ActivityResource(activitySchema.data).contributionMode(todayRound)
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to get the daily activity : ' + error.message,
+      })
+    }
+  }
+
+  async proposalAnswer({ bouncer, params, auth, request, response }: HttpContext) {
+    try {
+      const payload = await request.validateUsing(proposalAdventureValidator)
+
+      const adventure = await this.adventureService.getById(params.id)
+      if (!adventure) throw new Error('Adventure not found')
+
+      const isAuthorized = await bouncer
+        .with(AdventurePolicy)
+        .allows('collaboratorAction', adventure)
+      if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
+
+      const round = await this.adventureService.getAdventureRound(adventure)
+      if (!round) throw new Error('Round not found')
+      if (round.selectedSubject !== null) throw new Error('Round subject already exists')
+
+      const collaborator = await this.adventureService.getCollaboratorByUser(adventure, auth.user!)
+      if (!collaborator) throw new Error('Collaborator not found')
+
+      return await this.roundService.updateRoundSubject(round, {
+        ...payload,
+        collaboratorId: collaborator.id,
+      })
+    } catch (error) {
+      return response.abort({
+        error: 'An error occurred while trying to answer proposal : ' + error.message,
+      })
+    }
+  }
+
+  async contributionAnswer({ bouncer, params, auth, request, response }: HttpContext) {
+    try {
+      const payload = await request.validateUsing(contributionAdventureValidator)
+
+      const adventure = await this.adventureService.getById(params.id)
+      if (!adventure) throw new Error('Adventure not found')
+
+      const isAuthorized = await bouncer
+        .with(AdventurePolicy)
+        .allows('collaboratorAction', adventure)
+      if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
+
+      const round = await this.adventureService.getAdventureRound(adventure)
+      if (!round) throw new Error('Round not found')
+
+      const collaborator = await this.adventureService.getCollaboratorByUser(adventure, auth.user!)
+      if (!collaborator) throw new Error('Collaborator not found')
+
+      return await this.activityService.saveAnswer(round, collaborator, payload)
+    } catch (error) {
+      return response.abort({
+        error: 'An error occurred while trying to answer contribution : ' + error.message,
       })
     }
   }

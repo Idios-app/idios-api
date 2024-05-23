@@ -9,6 +9,11 @@ export default class ActivityAnswer extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
+  @column()
+  declare content: {
+    text?: string
+  }
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

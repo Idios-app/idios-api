@@ -7,7 +7,6 @@ export default class AdventureResource extends BaseResource {
     return {
       id: this.model.id,
       name: this.model.name,
-      streak: this.model.streak,
       createdAt: this.model.createdAt,
       updatedAt: this.model.updatedAt,
     }

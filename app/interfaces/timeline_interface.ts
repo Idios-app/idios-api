@@ -1,4 +1,4 @@
-export interface TimelineInterface {
+export default interface TimelineInterface {
   id?: number
   isActive: boolean
 }
