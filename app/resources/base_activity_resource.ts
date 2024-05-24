@@ -1,10 +1,14 @@
+import logger from '@adonisjs/core/services/logger'
+import CustomVariableReferences from '../enums/custom_variable_references.js'
+
 enum Props {
   dialogs = 'dialogs',
   background = 'background',
   items = 'items',
+  canCreate = 'canCreate',
 }
 
-const SLICE_DATA_PROPS = [Props.dialogs, Props.items]
+const SLICE_DATA_PROPS = [Props.dialogs, Props.items, Props.canCreate]
 
 type SliceData = {
   [key: string]: SliceData | any
@@ -12,8 +16,10 @@ type SliceData = {
 
 export abstract class BaseActivityResource {
   protected schema: Array<object> = []
+  protected activityInfo: { id: string; title: string }
 
   constructor(data: any) {
+    this.activityInfo = { id: data.id, title: data.attributes.title }
     if (data && data.attributes) {
       const arrayKey = Object.keys(data.attributes).find((key) =>
         Array.isArray(data.attributes[key])
@@ -111,10 +117,44 @@ export abstract class BaseActivityResource {
   }
 
   private items(obj: any, parentData: SliceData) {
+    obj.forEach((item: any) => {
+      this.detectVariable(item.text)
+    })
     parentData[Props.items] = obj
   }
 
   private background(obj: any, parentData: SliceData) {
     parentData[Props.background] = obj
+  }
+
+  private canCreate(obj: any, parentData: SliceData) {
+    parentData[Props.canCreate] = obj
+  }
+
+  protected detectVariable(string: string): boolean {
+    if (string.includes('{{') && string.includes('}}')) {
+      const regex = /{{\s*(\S+)\s*}}/
+      const match = string.match(regex)
+      if (!match) {
+        logger.fatal(
+          `Error : detectVariable -> ${string} -> Activity "${this.activityInfo.title}"(${this.activityInfo.id})`
+        )
+        return false
+      }
+
+      const variable = match[1].split('.')
+
+      const model =
+        CustomVariableReferences[variable[1].toUpperCase() as keyof typeof CustomVariableReferences]
+
+      console.log(model)
+
+      //TODO : Bring up auth related info (adventure id, collaborator id)
+      //const targetedModel
+
+      //const mediumVal = CustomVariableReferences[test as keyof typeof CustomVariableReferences]
+    }
+
+    return false
   }
 }
