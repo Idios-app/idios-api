@@ -1,5 +1,7 @@
 import logger from '@adonisjs/core/services/logger'
-import CustomVariableReferences from '../enums/custom_variable_references.js'
+import ReferenceInterface from '../interfaces/reference_interface.js'
+import Reference from '#models/reference'
+import { ModelObject } from '@adonisjs/lucid/types/model'
 
 enum Props {
   dialogs = 'dialogs',
@@ -17,9 +19,11 @@ type SliceData = {
 export abstract class BaseActivityResource {
   protected schema: Array<object> = []
   protected activityInfo: { id: string; title: string }
+  protected references: ReferenceInterface | undefined
 
-  constructor(data: any) {
+  constructor(data: any, references?: ReferenceInterface) {
     this.activityInfo = { id: data.id, title: data.attributes.title }
+    this.references = references
     if (data && data.attributes) {
       const arrayKey = Object.keys(data.attributes).find((key) =>
         Array.isArray(data.attributes[key])
@@ -118,7 +122,10 @@ export abstract class BaseActivityResource {
 
   private items(obj: any, parentData: SliceData) {
     obj.forEach((item: any) => {
-      this.detectVariable(item.text)
+      this.detectVariable(item.text).then((r) => {
+        console.log(r)
+        if (r) item.text = r
+      })
     })
     parentData[Props.items] = obj
   }
@@ -131,30 +138,73 @@ export abstract class BaseActivityResource {
     parentData[Props.canCreate] = obj
   }
 
-  protected detectVariable(string: string): boolean {
-    if (string.includes('{{') && string.includes('}}')) {
-      const regex = /{{\s*(\S+)\s*}}/
-      const match = string.match(regex)
-      if (!match) {
+  protected async detectVariable(string: string) {
+    if (!this.references) return
+    if (!string.includes('{{') || !string.includes('}}')) return
+
+    const regex = /{{\s*(\S+)\s*}}/g
+    let matches
+    const variables = []
+
+    while ((matches = regex.exec(string)) !== null) {
+      const reference = await Reference.findBy('key', matches[1].toLowerCase())
+      if (reference) {
+        const pathKey = reference.key.split('.')
+        variables.push({ key: matches[0], path: reference.path, pathKey: pathKey })
+      } else {
         logger.fatal(
-          `Error : detectVariable -> ${string} -> Activity "${this.activityInfo.title}"(${this.activityInfo.id})`
+          `Error: detectVariable -> Variable "${matches[1]}" not found -> Activity "${this.activityInfo.title}"(${this.activityInfo.id})`
         )
-        return false
       }
-
-      const variable = match[1].split('.')
-
-      const model =
-        CustomVariableReferences[variable[1].toUpperCase() as keyof typeof CustomVariableReferences]
-
-      console.log(model)
-
-      //TODO : Bring up auth related info (adventure id, collaborator id)
-      //const targetedModel
-
-      //const mediumVal = CustomVariableReferences[test as keyof typeof CustomVariableReferences]
     }
 
-    return false
+    if (variables.length === 0) return string
+    let resultString = string
+    for (const variable of variables) {
+      const models = await this.pathFinder(variable.path, this.references.adventure)
+      if (Array.isArray(models)) {
+        this.references.custom = {
+          ...this.references.custom,
+          [`${variable.key}`]: 3,
+        }
+      } else if (typeof models === 'object' && models !== null) {
+        const replacementValue = models[variable.pathKey[variable.pathKey.length - 1]]
+        resultString = resultString.replace(variable.key, replacementValue)
+      }
+    }
+
+    return resultString
+  }
+
+  protected async pathFinder(
+    path: object,
+    model: ModelObject | Array<ModelObject>
+  ): Promise<ModelObject | Array<ModelObject>> {
+    for (const key in path) {
+      if (path.hasOwnProperty(key)) {
+        const deep = path[key as keyof typeof path]
+        if (Object.keys(deep).length === 0) {
+          return model
+        }
+
+        if (Array.isArray(model)) {
+          logger.fatal(
+            `Error : pathFinder -> ${JSON.stringify(path)} / ${JSON.stringify(deep)} -> Activity "${this.activityInfo.title}"(${this.activityInfo.id})`
+          )
+          return model
+        }
+
+        const result: ModelObject | Array<ModelObject> = await this.pathFinder(
+          deep,
+          await model.related(Object.keys(deep)[0]).query()
+        )
+
+        if (result) {
+          return result
+        }
+      }
+    }
+
+    return model
   }
 }

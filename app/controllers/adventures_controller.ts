@@ -63,7 +63,7 @@ export default class AdventuresController {
 
   async destroy({}: HttpContext) {}
 
-  async getTodayActivity({ bouncer, params, response }: HttpContext) {
+  async getTodayActivity({ bouncer, params, auth, response }: HttpContext) {
     try {
       const adventure = await this.adventureService.getById(params.id)
       if (!adventure) throw new Error('Adventure not found')
@@ -90,7 +90,10 @@ export default class AdventuresController {
 
       if (!todayRound.selectedSubject) {
         const activitySchema = await this.activityService.fetchRawProposalSchema(activity.id)
-        return new ActivityResource(activitySchema.data)
+        return new ActivityResource(activitySchema.data, {
+          user: auth.user!,
+          adventure: adventure,
+        })
       }
 
       const activitySchema = await this.activityService.fetchRawContributionSchema(activity.id)
