@@ -1,4 +1,4 @@
-export interface CollaboratorInterface {
+export default interface CollaboratorInterface {
   id?: number
   adventureId: number
   userId: number

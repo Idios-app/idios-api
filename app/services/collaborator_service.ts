@@ -1,5 +1,5 @@
 import Collaborator from '#models/collaborator'
-import { CollaboratorInterface } from '../interfaces/collaborator_interface.js'
+import CollaboratorInterface from '../interfaces/collaborator_interface.js'
 import { inject } from '@adonisjs/core'
 import { HttpContext } from '@adonisjs/core/http'
 
