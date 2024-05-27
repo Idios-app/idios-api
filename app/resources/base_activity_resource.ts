@@ -20,34 +20,41 @@ export abstract class BaseActivityResource {
   protected schema: Array<object> = []
   protected activityInfo: { id: string; title: string }
   protected references: ReferenceInterface | undefined
+  readonly #arrayKey: string | undefined
+  readonly #data: any
 
   constructor(data: any, references?: ReferenceInterface) {
     this.activityInfo = { id: data.id, title: data.attributes.title }
     this.references = references
-    if (data && data.attributes) {
-      const arrayKey = Object.keys(data.attributes).find((key) =>
-        Array.isArray(data.attributes[key])
+    this.#data = data
+    if (this.#data && this.#data.attributes) {
+      this.#arrayKey = Object.keys(this.#data.attributes).find((key) =>
+        Array.isArray(this.#data.attributes[key])
       )
-      if (arrayKey) {
-        this.parser(data.attributes[arrayKey])
-      }
     }
   }
 
   abstract additionalProperties(): {}
 
-  private parser(obj: any, parentData: SliceData = {}): SliceData {
+  async init() {
+    if (this.#arrayKey) {
+      await this.parser(this.#data.attributes[this.#arrayKey])
+      return this.schema
+    }
+  }
+
+  private async parser(obj: any, parentData: SliceData = {}) {
     for (const key in obj) {
       if (!obj.hasOwnProperty(key)) continue
 
       const value = obj[key]
 
       if (Props.hasOwnProperty(key)) {
-        this.handleEnum(key, value, parentData, obj)
+        await this.handleEnum(key, value, parentData, obj)
       } else if (key === '__component') {
-        this.handleComponent(obj)
+        await this.handleComponent(obj)
       } else if (this.isObject(value)) {
-        this.handleObject(value, parentData)
+        await this.handleObject(value, parentData)
       } else {
         this.handleScalar(key, value, parentData)
       }
@@ -59,12 +66,12 @@ export abstract class BaseActivityResource {
     return typeof value === 'object' && value !== null
   }
 
-  private handleEnum(key: string, value: any, parentData: SliceData, obj: any): void {
+  private async handleEnum(key: string, value: any, parentData: SliceData, obj: any) {
     const enumValue = Props[key as keyof typeof Props]
     const methodName = Props[key as keyof typeof Props]
 
     if (typeof this[methodName] === 'function') {
-      this[methodName].call(this, value, parentData)
+      await this[methodName].call(this, value, parentData)
 
       if (SLICE_DATA_PROPS.includes(enumValue) && !parentData.sliceData) {
         parentData.sliceData = {}
@@ -79,28 +86,28 @@ export abstract class BaseActivityResource {
     }
   }
 
-  private handleComponent(obj: any): void {
+  private async handleComponent(obj: any) {
     const componentName = obj['__component'].match(/\w+$/)[0]
     delete obj['__component']
 
-    const componentData = this.parser(obj, { slice: componentName })
+    const componentData = await this.parser(obj, { slice: componentName })
 
     if (Object.keys(componentData).length > 0) {
       this.schema = [...this.schema, componentData]
     }
   }
 
-  private handleObject(value: any, parentData: SliceData): void {
+  private async handleObject(value: any, parentData: SliceData) {
     if (Array.isArray(value)) {
       for (const item of value) {
-        this.parser(item, parentData)
+        await this.parser(item, parentData)
       }
     } else {
-      this.parser(value, parentData)
+      await this.parser(value, parentData)
     }
   }
 
-  private handleScalar(key: string, value: any, parentData: SliceData): void {
+  private handleScalar(key: string, value: any, parentData: SliceData) {
     if (!parentData.sliceData) {
       parentData.sliceData = {}
     }
@@ -108,33 +115,27 @@ export abstract class BaseActivityResource {
     parentData.sliceData[key] = value
   }
 
-  private dialogs(obj: any, parentData: SliceData) {
-    if (Array.isArray(obj)) {
-      obj.forEach((dialog: any) => {
-        delete dialog.id
-      })
-      parentData[Props.dialogs] = obj
-    } else if (typeof obj === 'object') {
-      delete obj.id
-      parentData[Props.dialogs] = obj
+  private async dialogs(obj: any, parentData: SliceData) {
+    for (const dialog of obj) {
+      const string = await this.detectVariable(dialog.text)
+      if (string) dialog.text = string
     }
+    parentData[Props.dialogs] = obj
   }
 
-  private items(obj: any, parentData: SliceData) {
-    obj.forEach((item: any) => {
-      this.detectVariable(item.text).then((r) => {
-        console.log(r)
-        if (r) item.text = r
-      })
-    })
+  private async items(obj: any, parentData: SliceData) {
+    for (const item of obj) {
+      const string = await this.detectVariable(item.text)
+      if (string) item.text = string
+    }
     parentData[Props.items] = obj
   }
 
-  private background(obj: any, parentData: SliceData) {
+  private async background(obj: any, parentData: SliceData) {
     parentData[Props.background] = obj
   }
 
-  private canCreate(obj: any, parentData: SliceData) {
+  private async canCreate(obj: any, parentData: SliceData) {
     parentData[Props.canCreate] = obj
   }
 

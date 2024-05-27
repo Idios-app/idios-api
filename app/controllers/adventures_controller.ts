@@ -90,14 +90,18 @@ export default class AdventuresController {
 
       if (!todayRound.selectedSubject) {
         const activitySchema = await this.activityService.fetchRawProposalSchema(activity.id)
-        return new ActivityResource(activitySchema.data, {
+        const resource = new ActivityResource(activitySchema.data, {
           user: auth.user!,
           adventure: adventure,
         })
+        return await resource.init()
       }
 
       const activitySchema = await this.activityService.fetchRawContributionSchema(activity.id)
-      return new ActivityResource(activitySchema.data).contributionMode(todayRound)
+
+      const resource = new ActivityResource(activitySchema.data)
+      await resource.init()
+      return resource.contributionMode(todayRound)
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to get the daily activity : ' + error.message,
