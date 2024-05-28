@@ -28,11 +28,17 @@ router
     router.get('loading', [SessionController, 'getAllByUserId'])
 
     router.resource('adventures', AdventuresController).only(['store', 'show', 'edit', 'destroy'])
+    router.get('adventures/:id/round', [AdventuresController, 'getTodayActivity'])
+    router.post('adventures/:id/round/proposal', [AdventuresController, 'proposalAnswer'])
+    router.post('adventures/:id/round/contribution', [AdventuresController, 'contributionAnswer'])
+
     router.resource('codes', AccessCodesController).only(['store', 'show'])
     router
       .resource('collaborators', CollaboratorsController)
       .only(['store', 'show', 'update', 'destroy'])
     router.resource('activities', ActivitiesController).only(['show'])
+    router.get('activities/:id/recap', [ActivitiesController, 'showRecap'])
+    router.get('activities/:id/vote', [ActivitiesController, 'showVote'])
   })
   .use(middleware.auth())
 
