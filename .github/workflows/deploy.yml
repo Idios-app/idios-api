@@ -19,25 +19,3 @@ jobs:
         run: npm install
       - name: Run build task
         run: npm run build --if-present
-      - name: Deploy to Server
-        uses: easingthemes/ssh-deploy@main
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-rlgoDzvc -i --delete"
-          SOURCE: "build/"
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: "~/idios-api"
-          EXCLUDE: "/build/, /node_modules/"
-
-      - name: Install production dependencies on server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            node -v
-            cd ~/idios-api
-            echo "${{ secrets.ENV_CONTENT }}" > .env
-            npm ci --omit="dev"
