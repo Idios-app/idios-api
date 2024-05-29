@@ -53,10 +53,6 @@ router
   })
   .prefix('user')
 
-router.get('/error', async () => {
-  throw new Error('Test Sentry Error')
-})
-
 //Admin
 router
   .group(() => {
