@@ -27,7 +27,7 @@ router
   .group(() => {
     router.get('loading', [SessionController, 'getAllByUserId'])
 
-    router.resource('adventures', AdventuresController).only(['store', 'show', 'edit', 'destroy'])
+    router.resource('adventures', AdventuresController).only(['index', 'store', 'show'])
     router.get('adventures/:id/round', [AdventuresController, 'getTodayActivity'])
     router.post('adventures/:id/round/proposal', [AdventuresController, 'proposalAnswer'])
     router.post('adventures/:id/round/contribution', [AdventuresController, 'contributionAnswer'])
