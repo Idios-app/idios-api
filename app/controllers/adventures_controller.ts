@@ -57,7 +57,23 @@ export default class AdventuresController {
     }
   }
 
-  async show({}: HttpContext) {}
+  async show({ bouncer, params, response }: HttpContext) {
+    try {
+      const adventure = await this.adventureService.getById(params.id)
+      if (!adventure) throw new Error('Adventure not found')
+
+      const isAuthorized = await bouncer
+        .with(AdventurePolicy)
+        .allows('collaboratorAction', adventure)
+      if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
+
+      response.send(adventure)
+    } catch (error) {
+      return response.abort({
+        error: 'An error occurred while trying to show adventure : ' + error.message,
+      })
+    }
+  }
 
   async edit({}: HttpContext) {}
 
