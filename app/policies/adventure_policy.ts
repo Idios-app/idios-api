@@ -10,6 +10,11 @@ export default class AdventurePolicy extends BasePolicy {
   constructor(protected adventureService: AdventureService) {
     super()
   }
+
+  index(user: User): AuthorizerResponse {
+    return !!user
+  }
+
   store(user: User): AuthorizerResponse {
     return !!user
   }

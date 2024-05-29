@@ -26,6 +26,30 @@ export default class AdventuresController {
     protected roundService: RoundService
   ) {}
 
+  async index({ bouncer, auth, response }: HttpContext){
+    try {
+      const isAuthorized = await bouncer
+        .with(AdventurePolicy)
+        .allows('index')
+      if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
+
+      const adventures = await this.adventureService.getAllByUser(auth.user!)
+      if (!adventures) return response.notFound({ error: 'Adventures not found' })
+
+      let adventuresResource = []
+      for (const adventure of adventures) {
+        const resource = await new AdventureResource(adventure).withRelationships()
+        adventuresResource.push(resource)
+      }
+
+      return adventuresResource
+    } catch (error) {
+      return response.abort({
+        error: 'An error occurred while trying to show adventure index : ' + error.message,
+      })
+    }
+  }
+
   async store({ bouncer, auth, request, response }: HttpContext) {
     try {
       const payload = await request.validateUsing(createAdventureValidator)
@@ -60,14 +84,16 @@ export default class AdventuresController {
   async show({ bouncer, params, response }: HttpContext) {
     try {
       const adventure = await this.adventureService.getById(params.id)
-      if (!adventure) throw new Error('Adventure not found')
+      if (!adventure) return response.notFound({ error: 'Adventure not found' })
 
       const isAuthorized = await bouncer
         .with(AdventurePolicy)
         .allows('collaboratorAction', adventure)
       if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
 
-      response.send(adventure)
+      const resource = await new AdventureResource(adventure).withRelationships()
+
+      response.send(resource)
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to show adventure : ' + error.message,

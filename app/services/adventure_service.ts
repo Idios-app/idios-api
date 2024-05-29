@@ -41,6 +41,17 @@ export class AdventureService {
     return await Adventure.find(id)
   }
 
+  async getAllByUser(user: User) {
+    const collaborators = await user.related('collaborators').query()
+    let adventures:Array<Adventure> = []
+    for (const collaborator of collaborators) {
+      const adventure = await collaborator.related('adventure').query().first()
+      if (!adventure) return null
+      adventures.push(adventure)
+    }
+    return adventures
+  }
+
   async getAdventureTimeline(adventure: Adventure) {
     const timelines = await adventure.related('timelines').query()
 
