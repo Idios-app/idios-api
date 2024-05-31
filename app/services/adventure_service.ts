@@ -43,7 +43,7 @@ export class AdventureService {
 
   async getAllByUser(user: User) {
     const collaborators = await user.related('collaborators').query()
-    let adventures:Array<Adventure> = []
+    let adventures: Array<Adventure> = []
     for (const collaborator of collaborators) {
       const adventure = await collaborator.related('adventure').query().first()
       if (!adventure) return null

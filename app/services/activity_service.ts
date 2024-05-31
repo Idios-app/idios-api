@@ -84,13 +84,9 @@ export default class ActivityService {
   }
 
   async getRandomActivity() {
-    try {
-      const randomActivity = await Activity.query().orderByRaw('RANDOM()').first()
-      if (!randomActivity) throw new Error('Activity is missing')
-      return randomActivity
-    } catch (error) {
-      return error.message
-    }
+    const randomActivity = await Activity.query().orderByRaw('RANDOM()').first()
+    if (!randomActivity) return null
+    return randomActivity
   }
 
   async saveAnswer(round: Round, collaborator: Collaborator, params: object) {

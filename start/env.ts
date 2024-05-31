@@ -35,5 +35,5 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   SENTRY_DSN: Env.schema.string.optional(),
-  SENTRY_TRACES_SAMPLE_RATE: Env.schema.number.optional()
+  SENTRY_TRACES_SAMPLE_RATE: Env.schema.number.optional(),
 })

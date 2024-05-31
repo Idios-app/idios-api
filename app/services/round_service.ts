@@ -14,6 +14,7 @@ export class RoundService {
     const result = await round.save()
 
     const activity = await this.activityService.getRandomActivity()
+    if (!activity) return null
     await result.related('activity').attach([activity.id])
     await result.related('timeline').attach([timeline.id])
 

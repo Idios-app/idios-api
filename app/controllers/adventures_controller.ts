@@ -26,11 +26,9 @@ export default class AdventuresController {
     protected roundService: RoundService
   ) {}
 
-  async index({ bouncer, auth, response }: HttpContext){
+  async index({ bouncer, auth, response }: HttpContext) {
     try {
-      const isAuthorized = await bouncer
-        .with(AdventurePolicy)
-        .allows('index')
+      const isAuthorized = await bouncer.with(AdventurePolicy).allows('index')
       if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
 
       const adventures = await this.adventureService.getAllByUser(auth.user!)
@@ -42,7 +40,7 @@ export default class AdventuresController {
         adventuresResource.push(resource)
       }
 
-      return adventuresResource
+      return response.send(adventuresResource)
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to show adventure index : ' + error.message,
@@ -73,7 +71,7 @@ export default class AdventuresController {
 
       await this.accessCodeService.generateAccessCode(adventure)
 
-      return response.ok(await new AdventureResource(adventure).withRelationships())
+      return response.send(await new AdventureResource(adventure).withRelationships())
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to store an adventure : ' + error.message,
@@ -93,7 +91,7 @@ export default class AdventuresController {
 
       const resource = await new AdventureResource(adventure).withRelationships()
 
-      response.send(resource)
+      return response.send(resource)
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to show adventure : ' + error.message,
@@ -108,7 +106,7 @@ export default class AdventuresController {
   async getTodayActivity({ bouncer, params, auth, response }: HttpContext) {
     try {
       const adventure = await this.adventureService.getById(params.id)
-      if (!adventure) throw new Error('Adventure not found')
+      if (!adventure) return response.notFound({ error: 'Adventure not found' })
 
       const isAuthorized = await bouncer
         .with(AdventurePolicy)
@@ -125,10 +123,10 @@ export default class AdventuresController {
       if (!todayRound) {
         todayRound = await this.roundService.addTodayRound(timeline)
       }
-      if (!todayRound) throw new Error('Round not found')
+      if (!todayRound) return response.notFound({ error: 'Round not found' })
 
       const activity = await todayRound.related('activity').query().first()
-      if (!activity) throw new Error('Activity not found')
+      if (!activity) return response.notFound({ error: 'Activity not found' })
 
       if (!todayRound.selectedSubject) {
         const activitySchema = await this.activityService.fetchRawProposalSchema(activity.id)
@@ -136,14 +134,14 @@ export default class AdventuresController {
           user: auth.user!,
           adventure: adventure,
         })
-        return await resource.init()
+        return response.send(await resource.init())
       }
 
       const activitySchema = await this.activityService.fetchRawContributionSchema(activity.id)
 
       const resource = new ActivityResource(activitySchema.data)
       await resource.init()
-      return resource.contributionMode(todayRound)
+      return response.send(resource.contributionMode(todayRound))
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to get the daily activity : ' + error.message,
@@ -156,7 +154,7 @@ export default class AdventuresController {
       const payload = await request.validateUsing(proposalAdventureValidator)
 
       const adventure = await this.adventureService.getById(params.id)
-      if (!adventure) throw new Error('Adventure not found')
+      if (!adventure) return response.notFound('Adventure not found')
 
       const isAuthorized = await bouncer
         .with(AdventurePolicy)
@@ -164,11 +162,12 @@ export default class AdventuresController {
       if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
 
       const round = await this.adventureService.getAdventureRound(adventure)
-      if (!round) throw new Error('Round not found')
-      if (round.selectedSubject !== null) throw new Error('Round subject already exists')
+      if (!round) return response.notFound('Round not found')
+      if (round.selectedSubject !== null)
+        return response.unauthorized('Round subject already exists')
 
       const collaborator = await this.adventureService.getCollaboratorByUser(adventure, auth.user!)
-      if (!collaborator) throw new Error('Collaborator not found')
+      if (!collaborator) return response.notFound('Collaborator not found')
 
       return await this.roundService.updateRoundSubject(round, {
         ...payload,
@@ -186,7 +185,7 @@ export default class AdventuresController {
       const payload = await request.validateUsing(contributionAdventureValidator)
 
       const adventure = await this.adventureService.getById(params.id)
-      if (!adventure) throw new Error('Adventure not found')
+      if (!adventure) return response.notFound('Adventure not found')
 
       const isAuthorized = await bouncer
         .with(AdventurePolicy)
@@ -194,10 +193,10 @@ export default class AdventuresController {
       if (!isAuthorized) return response.forbidden({ error: 'Unauthorized request' })
 
       const round = await this.adventureService.getAdventureRound(adventure)
-      if (!round) throw new Error('Round not found')
+      if (!round) return response.notFound('Round not found')
 
       const collaborator = await this.adventureService.getCollaboratorByUser(adventure, auth.user!)
-      if (!collaborator) throw new Error('Collaborator not found')
+      if (!collaborator) return response.notFound('Collaborator not found')
 
       return await this.activityService.saveAnswer(round, collaborator, payload)
     } catch (error) {

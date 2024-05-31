@@ -16,7 +16,7 @@ export default class AccessCodesController {
       const payload = await request.validateUsing(createAccessCodeValidator)
 
       const adventure = await this.adventureService.getById(payload.adventureId)
-      if (!adventure) throw new Error('Adventure not found')
+      if (!adventure) return response.notFound('Adventure not found')
 
       if (
         auth.user
@@ -24,11 +24,11 @@ export default class AccessCodesController {
         // (await this.adventureService.getCollaboratorByUser(adventure, auth.user!)) === null
       )
         if (adventure.$getRelated('code') && !payload.regen)
-          throw new Error(
+          return response.unauthorized(
             'Access code already exists. Use "regen" attribute to force regeneration.'
           )
 
-      return this.accessCodeService.generateAccessCode(adventure)
+      return response.send(await this.accessCodeService.generateAccessCode(adventure))
     } catch (error) {
       return response.notFound({
         error: 'An error occurred while trying to generate AccessCode: ' + error.message,
@@ -38,16 +38,16 @@ export default class AccessCodesController {
 
   async show({ params, response, auth }: HttpContext) {
     try {
-      if (!auth.user) throw new Error('User not found')
+      if (!auth.user) return response.notFound('User not found')
 
       const adventure = await this.adventureService.getById(params.id)
-      if (!adventure) throw new Error('Adventure not found')
+      if (!adventure) return response.notFound('Adventure not found')
 
       //TODO : check if user is collaborator of the adventure
       // const collaborator = await this.adventureService.getCollaboratorByUser(adventure, auth.user)
       // if (!collaborator) throw new Error('You are not related to this adventure')
 
-      return this.accessCodeService.getByAdventure(adventure)
+      return response.send(await this.accessCodeService.getByAdventure(adventure))
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to get an access code : ' + error.message,

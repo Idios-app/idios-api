@@ -2,10 +2,14 @@ import Adventure from '#models/adventure'
 import Timeline from '#models/timeline'
 import { inject } from '@adonisjs/core'
 import { RoundService } from '#services/round_service'
+import { AdventureService } from '#services/adventure_service'
 
 @inject()
 export class TimelineService {
-  constructor(protected roundService: RoundService) {}
+  constructor(
+    protected roundService: RoundService,
+    protected adventureService: AdventureService
+  ) {}
 
   async save(adventure: Adventure) {
     const timeline = new Timeline()
@@ -36,5 +40,11 @@ export class TimelineService {
 
     timeline.isActive = true
     await timeline.save()
+  }
+
+  async getTimelineStreak(adventure: Adventure) {
+    const timeline = await this.adventureService.getAdventureTimeline(adventure)
+    if (!timeline) return null
+    return await timeline.related('rounds').query().count('* as total')
   }
 }

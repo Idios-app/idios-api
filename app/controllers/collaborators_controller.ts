@@ -17,22 +17,24 @@ export default class CollaboratorsController {
       const { code } = await request.validateUsing(createCollaboratorValidator)
 
       const accessCode = await this.accessCodeService.getByCode(code)
-      if (!accessCode) throw new Error('Access Code is missing')
+      if (!accessCode) return response.notFound('Access Code not found')
 
       const adventure = await accessCode.related('adventure').query().first()
-      if (!adventure) throw new Error('Adventure not found')
+      if (!adventure) return response.notFound('Adventure not found')
 
       if (await bouncer.with(CollaboratorPolicy).denies('store', adventure)) {
         return response.forbidden({ error: 'Cannot add a collaborator' })
       }
 
-      return await this.collaboratorService.save({
-        adventureId: adventure.id,
-        userId: auth.user!.id,
-        description: '',
-        pseudo: '',
-        score: 0,
-      })
+      return response.send(
+        await this.collaboratorService.save({
+          adventureId: adventure.id,
+          userId: auth.user!.id,
+          description: '',
+          pseudo: '',
+          score: 0,
+        })
+      )
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to store a collaborator : ' + error.message,
@@ -50,7 +52,7 @@ export default class CollaboratorsController {
         return response.forbidden({ error: 'Cannot update a collaborator' })
       }
 
-      return await this.collaboratorService.update(params.id, pseudo)
+      return response.send(await this.collaboratorService.update(params.id, pseudo))
     } catch (error) {
       return response.abort({
         error: 'An error occurred while trying to update a collaborator : ' + error.message,

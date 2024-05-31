@@ -43,6 +43,7 @@ export abstract class BaseActivityResource {
     }
   }
 
+  // Recursive parser method
   private async parser(obj: any, parentData: SliceData = {}) {
     for (const key in obj) {
       if (!obj.hasOwnProperty(key)) continue
@@ -139,6 +140,7 @@ export abstract class BaseActivityResource {
     parentData[Props.canCreate] = obj
   }
 
+  // Detect and replace variables given by the builder in a string
   protected async detectVariable(string: string) {
     if (!this.references) return
     if (!string.includes('{{') || !string.includes('}}')) return
